@@ -1,7 +1,9 @@
 # Ignore sensitive information
 ansible.cfg
 *.retry
-hosts
+hosts/development
+hosts/staging
+hosts/production
 group_vars/development
 group_vars/staging
 group_vars/production

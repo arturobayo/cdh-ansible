@@ -1,0 +1,10 @@
+[development]
+<ips>
+[master]
+<ips>
+[worker]
+<ips>
+[edge]
+<ips>
+[service]
+<ips>

@@ -1,0 +1,5 @@
+## My cluster hosts
+Host *.mycluster.int
+  Hostname %h
+  User root
+  IdentityFile /root/.ssh/id_rsa

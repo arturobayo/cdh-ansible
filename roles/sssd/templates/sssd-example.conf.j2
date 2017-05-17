@@ -1,0 +1,31 @@
+[sssd]
+config_file_version = 2
+debug_level = 1
+domains = COMPANY.com
+services = nss,pam,ssh
+
+[nss]
+filter_users = root,named,avahi,haldaemon,dbus,radiusd,news,nscd,slurm,munge
+override_homedir = /home/%u
+default_shell = /bin/bash
+
+[domain/COMPANY.com]
+debug_level = 1
+id_provider = ldap
+auth_provider = ldap
+
+ldap_default_bind_dn = {{ ldap_default_bind_dn }}
+ldap_default_authtok = {{ ldap_password }}
+ldap_schema = rfc2307
+ldap_uri = ldap://ldap1.COMPANY.com
+
+ldap_search_base = {{ ldap_search_base }}
+ldap_user_search_base = {{ ldap_user_search_base }}
+ldap_group_search_base = {{ ldap_group_search_base }}
+
+access_provider = permit
+# Permits offline logins:
+#cache_credentials = true
+# Enables use of POSIX UIDs and GIDs:
+#ldap_id_mapping = true
+dyndns_update = false

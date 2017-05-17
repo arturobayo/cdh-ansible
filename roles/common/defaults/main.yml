@@ -1,0 +1,10 @@
+minimum_ansible_version: 2.0.2.0
+default_timezone: Etc/UTC
+nscd_path: /etc/nscd.conf
+nscd_hosts_cache: "yes"
+nscd_passwd_cache: "no"
+nscd_group_cache: "no"
+nscd_netgroup_cache: "no"
+sssd_path: /etc/sssd/
+swappiness_value: 1
+selinux_mode: disabled

@@ -1,0 +1,2 @@
+default_timezone: Europe/Madrid
+node_minimum_memory: 10000

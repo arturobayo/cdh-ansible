@@ -1,0 +1,40 @@
+nodes:
+  master01:
+    disks:
+    - {dev: vda, fs: false, mount: /data/ssd/vda, size: 50, type: l_ssd, volume: false}
+    flavor: VC1M
+    fqdn: master01.mycluster.int
+    role: master
+  service01:
+    disks:
+    - {dev: nbd0, fs: false, mount: /data/ssd/nbd0, size: 50, type: l_ssd, volume: false}
+    flavor: C2M
+    fqdn: service01.mycluster.int
+    role: service
+  worker01:
+    disks:
+    - {dev: vda, fs: false, mount: /data/ssd/vda, type: l_ssd, volume: false}
+    - {dev: vdb, fs: ext3, mount: /data/ssd/vdb, size: 50, type: l_ssd, volume: true}
+    flavor: VC1M
+    fqdn: worker01.mycluster.int
+    role: worker
+  worker02:
+    disks:
+    - {dev: vda, fs: false, mount: /data/ssd/vda, type: l_ssd, volume: false}
+    - {dev: vdb, fs: ext3, mount: /data/ssd/vdb, size: 50, type: l_ssd, volume: true}
+    flavor: VC1M
+    fqdn: worker02.mycluster.int
+    role: worker
+  worker03:
+    disks:
+    - {dev: vda, fs: false, mount: /data/ssd/vda, type: l_ssd, volume: false}
+    - {dev: vdb, fs: ext3, mount: /data/ssd/vdb, size: 50, type: l_ssd, volume: true}
+    flavor: VC1M
+    fqdn: worker03.mycluster.int
+    role: worker
+  edge01:
+    disks:
+    - {dev: nbd0, fs: false, mount: /data/ssd/nbd0, type: l_ssd, volume: false}
+    flavor: C2S
+    fqdn: edge01.mycluster.int
+    role: worker

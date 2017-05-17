@@ -1,0 +1,10 @@
+flavor_config:
+  disks:
+    vdc:
+      type: hdd
+      fs: ext3
+      mount: /data/hdd/1/
+    vdd:
+      type: hdd
+      fs: ext3
+      mount: /data/hdd/2/

@@ -1,0 +1,10 @@
+---
+- include: variable-check.yml
+  vars:
+    playbook: run-create-infrastructure.yml
+
+- name: "Create cluster on cloud infrastructure provider with Terraform"
+  hosts: 127.0.0.1
+  connection: local
+  roles:
+    - { role: terraform, tags: [terraform] }

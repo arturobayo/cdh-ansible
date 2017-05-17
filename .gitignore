@@ -1,0 +1,13 @@
+# Ignore sensitive information
+ansible.cfg
+*.retry
+hosts
+group_vars/development
+group_vars/staging
+group_vars/production
+files/terraform/development
+files/terraform/staging
+files/terraform/production
+
+# Ignore mac folder
+.DS_Store

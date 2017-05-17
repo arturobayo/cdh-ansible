@@ -1,0 +1,199 @@
+---
+- name: Validate Ansible version
+  assert:
+    that:
+     - "{{ ansible_version is defined }}"
+     - "{{ ansible_version.full | version_compare(minimum_ansible_version, '>=') }}"
+    msg: "Your Ansible version is too old. CDH deployment requires at least {{ minimum_ansible_version }}. Your version is {{ ansible_version.full | default('< 1.6') }}"
+  run_once: true
+
+- name: Copy hosts
+  template:
+    src="{{ role_path }}/files/hosts.j2"
+    dest=/etc/hosts
+    owner=root
+    group=root
+    mode=0644
+  when: env == "development"
+
+- name: Configure ssh config
+  copy:
+    src="{{ role_path }}/files/ssh_config"
+    dest="/root/.ssh/config"
+    owner=root
+    group=root
+    mode=0644
+
+- name: Copy ssh public key
+  copy:
+    src="{{ role_path }}/files/id_rsa.pub"
+    dest="/root/.ssh/id_rsa.pub"
+    owner=root
+    group=root
+    mode=0400
+
+- name: Copy ssh private key
+  copy:
+    src="{{ role_path }}/files/id_rsa"
+    dest="/root/.ssh/id_rsa"
+    owner=root
+    group=root
+    mode=0400
+
+- name: Configure authorized keys
+  authorized_key:
+    user: root
+    key: "{{ lookup('file', '{{ role_path }}/files/id_rsa.pub') }}"
+
+- name: Copy cm5 repo file
+  template:
+    src="{{ role_path }}/files/cm5.j2"
+    dest=/etc/yum.repos.d/cm5.repo
+    owner=root
+    group=root
+    mode=0644
+
+- name: Copy cdh5 repo file
+  template:
+    src="{{ role_path }}/files/cdh5.j2"
+    dest=/etc/yum.repos.d/cdh5.repo
+    owner=root
+    group=root
+    mode=0644
+
+# - name: Update Yum
+#   shell: yum -y update
+
+- name: Checking essential packages
+  yum:
+    name: "{{ item }}"
+    state: present
+    enablerepo: cm5
+  with_items:
+  - ntp
+  - nss
+  - sssd
+  - nscd
+  - libselinux-python
+  - cloudera-manager-daemons
+  #- oracle-j2sdk1.7
+
+- name: Validate RAM
+  debug:
+    msg: "Note: Node {{ ansible_fqdn }} is configured with less than minimum RAM"
+  when: ansible_memtotal_mb < {{ node_minimum_memory }}
+
+- name: Validate timezone variable
+  stat:
+    path: /usr/share/zoneinfo/{{ default_timezone }}
+  register: timezone_path
+  changed_when: false
+
+- name: Explain timezone error
+  fail:
+    msg: "{{ default_timezone }} is not a valid timezone"
+  when: not timezone_path.stat.exists
+
+# - name: "Set timezone to {{ default_timezone }}"
+#   timezone: name={{ default_timezone }}
+
+# - name: "Network checking"
+#   fail:
+#       msg: "DNS lookup and network check failed"
+#   when: lookup('dig', '{{ ansible_fqdn }}') | search({{ ansible_all_ipv4_addresses }})
+
+- name: Ensure that nscd service is installed
+  yum: name=nscd state=installed
+
+- name: Check if nscd config exists
+  stat:
+    path: "{{ nscd_path }}"
+  register: current_nscd_path
+
+- name: Explain nscd error
+  fail:
+    msg: "nscd path doesn't exists"
+  when: not current_nscd_path.stat.exists
+
+- name: Check if sssd is enabled
+  stat:
+    path: "{{ sssd_path }}"
+  register: current_sssd_path
+
+- fail:
+    msg: "sssd is not enabled"
+  when: not current_sssd_path.stat.exists
+
+- name: Configure nscd cache when sssd enabled (hosts(y))
+  lineinfile: dest={{ nscd_path }} line="enable-cache hosts {{ nscd_hosts_cache }}"
+
+- name: Configure nscd cache when sssd enabled (passwd(n))
+  lineinfile: dest={{ nscd_path }} line="enable-cache passwd {{ nscd_passwd_cache }}"
+
+- name: Configure nscd cache when sssd enabled (group(n))
+  lineinfile: dest={{ nscd_path }} line="enable-cache group {{ nscd_group_cache }}"
+
+- name: Configure nscd cache when sssd enabled (netgroup(n))
+  lineinfile: dest={{ nscd_path }} line="enable-cache netgroup {{ nscd_netgroup_cache }}"
+
+- name: Set selinux state to {{ selinux_mode }}
+  selinux: state={{ selinux_mode }}
+
+- name: Configure swappiness
+  sysctl: name=vm.swappiness value={{ swappiness_value }} state=present
+
+- name: Disable Transparent Huge Pages (enabled, session)
+  shell: "if test -f /sys/kernel/mm/transparent_hugepage/enabled; then echo never > /sys/kernel/mm/transparent_hugepage/enabled; fi"
+
+- name: Disable Transparent Huge Pages (enabled, reboot persistent)
+  lineinfile: dest=/etc/rc.local line="if test -f /sys/kernel/mm/transparent_hugepage/enabled; then echo never > /sys/kernel/mm/transparent_hugepage/enabled; fi"
+
+- name: Disable Transparent Huge Pages (defrag, session)
+  shell: "if test -f /sys/kernel/mm/transparent_hugepage/defrag; then echo never > /sys/kernel/mm/transparent_hugepage/defrag; fi"
+
+- name: Disable Transparent Huge Pages (defrag, reboot persistent)
+  lineinfile: dest=/etc/rc.local line="if test -f /sys/kernel/mm/transparent_hugepage/defrag; then echo never > /sys/kernel/mm/transparent_hugepage/defrag; fi"
+
+- name: Configure ulimits (nofile, hdfs)
+  lineinfile: dest=/etc/security/limits.conf line="hdfs - nofile  32768"
+
+- name: Configure ulimits (nofile, mapred)
+  lineinfile: dest=/etc/security/limits.conf line="mapred - nofile  32768"
+
+- name: Configure ulimits (nofile, hbase)
+  lineinfile: dest=/etc/security/limits.conf line="hbase - nofile  32768"
+
+- name: Configure ulimits (nproc, hdfs)
+  lineinfile: dest=/etc/security/limits.conf line="hdfs - nproc  32768"
+
+- name: Configure ulimits (nproc, mapred)
+  lineinfile: dest=/etc/security/limits.conf line="mapred - nproc  32768"
+
+- name: Configure ulimits (nproc, hbase)
+  lineinfile: dest=/etc/security/limits.conf line="hbase - nproc  32768"
+
+- name: Ensure that IPv6 (networking) is disabled
+  lineinfile: dest=/etc/sysconfig/network line="NETWORKING_IPV6=no"
+
+- name: Ensure that IPv6 (init) is disabled
+  lineinfile: dest=/etc/sysconfig/network line="IPV6INIT=no"
+
+# - name: Remove unnecessary services (iptables)
+#   service: name=iptables state=stopped enabled=no
+
+# - name: Remove unnecessary services (ip6tables)
+#   service: name=ip6tables state=stopped enabled=no
+
+- name: Remove unnecessary services (postfix)
+  service: name=postfix state=stopped enabled=no
+
+- name: Ensure that ntp service is running
+  service: name=ntpd state=started
+
+- name: Ensure that nscd service is running
+  service: name=nscd state=started
+
+- name: Ensure that sshd service is running
+  service: name=sshd state=started
+
+

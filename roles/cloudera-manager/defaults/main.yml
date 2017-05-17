@@ -1,0 +1,3 @@
+---
+# set cloudera manager server log path
+cloudera_manager_log_path: /var/log/cloudera-scm-server/cloudera-scm-server.log

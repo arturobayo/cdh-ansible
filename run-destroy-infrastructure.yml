@@ -1,0 +1,11 @@
+---
+- include: variable-check.yml
+  vars:
+    playbook: run-destroy-infrastructure.yml
+
+- name: "Destroy cluster on cloud infrastructure provider with Terraform"
+  hosts: 127.0.0.1
+  connection: local
+  tasks:
+    - command: cd {{ playbook_dir }}/files/terraform/{{ env }}/ && echo "yes" | terraform destroy -refresh=true
+

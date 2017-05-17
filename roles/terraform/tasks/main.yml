@@ -1,0 +1,11 @@
+---
+- name: Run configure terraform script
+  command: python {{ role_path }}/files/configure_tf.py {{ playbook_dir }} {{ env }}
+
+#
+#- name: Run terraform plan
+#  command: terraform apply -parallelism=1 -state {{ playbook_dir }}/files/terraform/{{ env }}/terraform.tfstate {{ playbook_dir }}/files/terraform/{{ env }}
+
+- name: Run configure nodes script
+  command: python {{ role_path }}/files/configure_nodes.py {{ playbook_dir }} {{ env }}
+

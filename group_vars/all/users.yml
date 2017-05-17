@@ -1,0 +1,11 @@
+# Admin user
+admin_user: bigdata
+
+# Also define 'vault_sudoer_passwords' (`group_vars/staging/vault.yml`, `group_vars/production/vault.yml`)
+users:
+  - name: "{{ admin_user }}"
+    groups:
+      - sudo
+    keys:
+      # - "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+      # - https://github.com/username.keys

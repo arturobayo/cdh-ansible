@@ -1,0 +1,28 @@
+---
+
+- name: Install Cloudera Manager
+  yum:
+    name: "{{ item }}"
+    state: present
+    enablerepo: cm5
+  with_items:
+    - oracle-j2sdk1.7
+    - cloudera-manager-server
+    - cloudera-manager-server-db-2
+
+
+- name: Copy MySQL JDBC driver
+  copy:
+    src="{{ role_path }}/files/mysql-connector-java.jar"
+    dest="/usr/share/java/"
+
+- name: Ensure that cloudera-scm-server-db service is running
+  service: name=cloudera-scm-server-db state=started
+
+- name: Ensure that cloudera-scm-server service is running
+  service: name=cloudera-scm-server state=started
+
+- name: "Wait for startup in server log"
+  wait_for: 'path={{ cloudera_manager_log_path }} search_regex="Started Jetty server" delay=20 timeout=400'
+  register: wait
+  ignore_errors: true

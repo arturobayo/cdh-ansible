@@ -1,0 +1,21 @@
+---
+- name: Determine Remote User
+  hosts: all:&{{ env }}
+  gather_facts: false
+  roles:
+    - { role: remote-user, tags: [remote-user, always] }
+
+- name: "Setting up the infrastructure - All nodes on {{ env }}"
+  hosts: all:&{{ env }}
+  become: yes
+  roles:
+    - { role: fail2ban, tags: [fail2ban] }
+    - { role: filesystem, tags: [filesystem] }
+    - { role: sssd, tags: [sssd] }
+    - { role: common, tags: [common] }
+
+- name: "Installing Cloudera Manager on service nodes"
+  hosts: service:&{{ env }}
+  become: yes
+  roles:
+    - { role: cloudera-manager, tags: [cloudera-manager] }

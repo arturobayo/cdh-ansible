@@ -1,0 +1,6 @@
+#127.0.0.1	{{ ansible_fqdn }}
+127.0.0.1	localhost
+
+{% for key, value in nodes.items() %}
+{{ value.ip }}	{{ value.fqdn }}
+{% endfor %}

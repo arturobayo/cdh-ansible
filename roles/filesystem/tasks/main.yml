@@ -1,0 +1,49 @@
+---
+# - name: Filter ansible_devices
+#   command: "echo '{{ item.value.holders | join(\'\n\') }}'"
+#   with_dict: "{{ ansible_devices }}"
+#   #when: item.key in lvm_disks and item.value.holders | length > 0
+#   register: ansible_devices_filtered
+
+# - name: Remove lv
+#   lvol:
+#     lv={{ item }}
+#     state=absent
+#     force=yes
+#   with_lines: ansible_devices_filtered
+
+- name: Create filesystem for each device
+  filesystem:
+      fstype="{{ item.1.fs }}"
+      dev="/dev/{{ item.1.dev }}"
+      opts="-m0 -j -O sparse_super,dir_index"
+      force="{{ item.1.force | default ('no') }}"
+  with_subelements:
+    - "{{ nodes }}"
+    - disks
+  when: (ansible_fqdn == item.0.fqdn and item.1.fs)
+
+- name: Run mkdir to create mount point paths
+  file:
+    path="{{ item.1.mount }}"
+    state=directory
+    mode=0755
+  with_subelements:
+    - "{{ nodes }}"
+    - disks
+  when: (ansible_fqdn == item.0.fqdn and item.1.mount)
+
+- name: Create mount point for each device
+  # command: 'echo "mount name={{ item.value.mount }}, src=/dev/{{ item.key }}, opts=noatime,nodiratime, state=mounted, fstype={{ item.value.fs }}"'
+  mount:
+    name="{{ item.1.mount }}"
+    src="/dev/{{ item.1.dev }}"
+    opts="noatime,nodiratime"
+    state=mounted
+    fstype={{ item.1.fs }}
+  with_subelements:
+    - "{{ nodes }}"
+    - disks
+  when: (ansible_fqdn == item.0.fqdn and item.1.fs) # item.1.fs para que no monte si queremos solo crear el directorio
+
+

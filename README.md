@@ -21,18 +21,6 @@ cdh-ansible uses a number of open source projects to work properly:
 * [Ansible] - Ansible is a radically simple IT automation system.
 * [Terraform] - Terraform is a tool for building, changing, and versioning infrastructure safely and efficiently.
 
-### How to run
-
-cdh-ansible requires [Ansible] v2.0.2+ to run.
-
-```sh
-$ ansible-playbook run-setup.yml -e env=development
-```
-For production environments...
-
-```sh
-$ ansible-playbook -vvvv run-setup.yml -e env=development
-```
 
 ### Configuration
 
@@ -71,6 +59,25 @@ nodes:
 | NODE_FQDN | Node's FQDN, used by ansible to auto-generate /etc/hosts file | Example: master01.mycluster.int |
 | NODE_ROLE | Node's role in the cluster | service,master,worker,edge |
 
+
+### How to run
+
+cdh-ansible requires [Ansible] v2.0.2+ to run.
+
+```sh
+$ ansible-playbook run-setup.yml -e env=development
+```
+For production environments...
+
+```sh
+$ ansible-playbook -vvvv run-setup.yml -e env=production
+```
+
+(Optional) If you have configured Terraform for creating infrastructure:
+
+```sh
+$ ansible-playbook -vvvv run-create-infrastructure.yml -e env=production
+```
 
 ### Todos
 
